@@ -18,4 +18,12 @@ best <- function(state, outcome) {
   # Get the rates for that state and outcome, include Hospital.Name
   rates <- hospital.data[hospital.data$State == state, c("Hospital.Name", outcomes[outcome])]
   
+  # Convert outcomes from character to numeric.
+  rates[, 2] <- as.numeric(rates[, 2])
+  
+  # Remove hospitals with undefined outcomes.
+  rates <- rates[complete.cases(rates),]
+
+  # Order the hospitals by rates then names and return the name with the lowest rate.
+  rates[order(rates[,2], rates[,1]),]$Hospital.Name[1]
 }
