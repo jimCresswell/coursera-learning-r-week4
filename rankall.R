@@ -1,44 +1,45 @@
 rankall <- function(outcome, num = "best") {
+  
   # Map from valid outcomes to columns in hospital data.
   outcomes = c("heart attack" = "Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack",
                "heart failure" = "Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure",
                "pneumonia" = "Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia")
-  
-  ## Read outcome data
-  hospital.data <- read.csv("outcome-of-care-measures.csv", na.strings="Not Available", stringsAsFactors=FALSE)
-  
+
   ## Check that outcome is valid
   if (! outcome %in% names(outcomes)) stop("invalid outcome")
   
-  # Get alphabetical list of states
-  states <- unique(hospital.data$State)
-  states <- states[order(states)]
+  ## Read outcome data
+  rates <- read.csv("outcome-of-care-measures.csv", na.strings="Not Available", stringsAsFactors=FALSE)
   
+  # Reduce to needed data, remove missing values, order by outcome then name.
+  rates <- rates[, c("State", "Hospital.Name", outcomes[outcome])]
+  names(rates) <- c("state", "hospital", "outcome")
+  rates <- rates[complete.cases(rates),]
+  rates <- rates[order(rates$state, rates$outcome, rates$hospital),]
+  
+  # Get alphabetical list of states
+  states <- unique(rates$state)
+
   ## Create the output data frame.
   hospitals <- data.frame(hospital = rep(NA, length(states)),
                           state = states,
                           row.names = states)
   
   ## For each state, find the hospital of the given rank
+  # Loop over states and observations, if we were taking
+  # the explicit loop approach further could count up
+  # observations until state changed so only loop once.
   for (state in states) {
 
-    # Get the rates for that outcome, include Hospital.Name
-    # Get the rates for that state and outcome, include Hospital.Name
-    rates <- hospital.data[hospital.data$State == state, c("Hospital.Name", outcomes[outcome])]
-    
-    # Remove hospitals with undefined outcomes.
-    rates <- rates[complete.cases(rates),]
-    
-    # Order the hospitals by rates then names.
-    rates <- rates[order(rates[,2], rates[,1]),]
+    state.rates = rates[rates$state == state,]
     
     # Determine the hospital rank desired and rank validity.
-    num.hospitals <- nrow(rates)
+    num.hospitals <- nrow(state.rates)
     if (num == "best") hospital.rank <- 1
     if (num == "worst") hospital.rank <- num.hospitals
     if (hospital.rank > num.hospitals) next()
     
-    hospitals[state,]$hospital <- rates[hospital.rank,]$Hospital.Name
+    hospitals[state,]$hospital <- state.rates[hospital.rank,]$hospital
   }
   
   ## Return a data frame with the hospital names and the
