@@ -37,8 +37,9 @@ rankAllLoop <- function(outcome, num = "best") {
     
     # Determine the hospital rank desired and rank validity.
     num.hospitals <- nrow(state.rates)
-    if (num == "best") hospital.rank <- 1
-    if (num == "worst") hospital.rank <- num.hospitals
+    hospital.rank <- num
+    if (hospital.rank == "best") hospital.rank <- 1
+    if (hospital.rank == "worst") hospital.rank <- num.hospitals
     if (hospital.rank > num.hospitals) next()
     
     hospitals[state,]$hospital <- state.rates[hospital.rank,]$hospital
@@ -73,9 +74,10 @@ rankall <- function(outcome, num = "best") {
 
     # Determine the hospital rank desired and rank validity.
     num.hospitals <- nrow(state.rates)
-    if (num == "best") hospital.rank <- 1
-    if (num == "worst") hospital.rank <- num.hospitals
-    if (hospital.rank > num.hospitals) next()
+    hospital.rank <- num
+    if (hospital.rank == "best") hospital.rank <- 1
+    if (hospital.rank == "worst") hospital.rank <- num.hospitals
+    if (hospital.rank > num.hospitals) return(NA)
     
     # Return the hospital name.
     state.rates[hospital.rank,]$hospital
